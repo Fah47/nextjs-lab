@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_SERVER = '43.208.253.87'
+        DOCKER_PORT = '10001'  // หรือเลือกพอร์ตที่ใช้ระหว่าง 1000-20000
+        DOCKER_IMAGE = "nextjs-app:${BUILD_ID}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout โค้ดจาก GitHub repository
+                git 'https://github.com/Fah47/nextjs-lab'
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // สร้าง Docker image
+                    docker.build(DOCKER_IMAGE)
+                }
+            }
+        }
+
+        stage('Deploy to Docker Server') {
+            steps {
+                script {
+                    // เชื่อมต่อกับ Docker server และรัน container
+                    sh """
+                    ssh -o StrictHostKeyChecking=no user@${DOCKER_SERVER} \
+                        'docker run -d -p ${DOCKER_PORT}:3000 ${DOCKER_IMAGE}'
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed"
+        }
+    }
+}
