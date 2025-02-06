@@ -2,24 +2,31 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_SERVER = '43.208.253.87'
+        DOCKER_SERVER = '43.208.241.236'  // Docker server IP
         DOCKER_PORT = '10001'  // หรือเลือกพอร์ตที่ใช้ระหว่าง 1000-20000
-        DOCKER_IMAGE = "nextjs-app:${BUILD_ID}"
+        DOCKER_IMAGE = "nextjs-app:${BUILD_ID}"  // Docker image tag
+        GIT_REPO = 'https://github.com/Fah47/nextjs-lab' // GitHub Repository URL
+        GIT_BRANCH = 'dev'  // หรือใช้ branch ที่ต้องการ
     }
 
     stages {
         stage('Checkout') {
             steps {
                 // Checkout โค้ดจาก GitHub repository
-                git 'https://github.com/Fah47/nextjs-lab'
+                git branch: GIT_BRANCH, url: GIT_REPO
             }
         }
-        
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    // สร้าง Docker image
-                    docker.build(DOCKER_IMAGE)
+                    // ตรวจสอบว่า Docker ติดตั้งใน Jenkins หรือไม่
+                    if (isUnix()) {
+                        // สร้าง Docker image จาก Dockerfile
+                        docker.build(DOCKER_IMAGE)
+                    } else {
+                        echo 'Docker not available on this Jenkins instance!'
+                    }
                 }
             }
         }
